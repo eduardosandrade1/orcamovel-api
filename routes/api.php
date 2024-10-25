@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ServiceController;
 use Illuminate\Support\Facades\Route;
 
 // Rotas de autenticação
@@ -25,6 +26,14 @@ Route::middleware('jwt-auth')->group(function () {
         Route::post('/', [UserController::class, 'store']);  // Criar um novo usuário
         Route::post('/{id}', [UserController::class, 'update']); // Atualizar um usuário existente
         Route::delete('/{id}', [UserController::class, 'destroy']); // Deletar um usuário
+    });
+
+    Route::prefix('service')->group(function () {
+        Route::get('/', [ServiceController::class, 'getAll']);  // Lista todos os serviços
+        Route::post('/', [ServiceController::class, 'store']);  // Cria um novo serviço
+        Route::get('/{id}', [ServiceController::class, 'show']);  // Exibe um serviço específico
+        Route::put('/{id}', [ServiceController::class, 'update']);  // Atualiza um serviço existente
+        Route::delete('/{id}', [ServiceController::class, 'destroy']);  // Deleta um serviço
     });
 
     // Outras rotas de usuário

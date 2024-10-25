@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\CreateClientAction;
+use App\Actions\CreateOrderAction;
+use App\Models\Api\Client;
 use App\Models\Api\Order;
 use Exception;
 use Illuminate\Http\Request;
@@ -20,18 +23,25 @@ class OrderController extends Controller
             return response()->json('error_generic', 400);
         }
     }
-    // Cria um novo pedido
-    public function store(Request $request)
+
+    public function create(Request $request)
     {
-        // Validação dos dados recebidos
+        // Validação dos dados
         $validator = Validator::make($request->all(), [
-            'client_id' => 'required|exists:clients,id',
-            'vehicle_id' => 'required|exists:vehicles,id',
-            'services' => 'required|array',  // Exige um array de serviços
-            'services.*.service_id' => 'required|exists:services,id',  // Cada serviço deve existir na tabela 'services'
+            'bandVehicle.id' => 'required|integer',
+            'breakDowns' => 'array',
+            'clientName' => 'required|string|max:255',
+            'colorVehicle' => 'required|string|max:255',
+            'contactValue' => 'required|string|max:255',
+            'infosVehicle' => 'array',
+            'plateName' => 'required|string|max:10',
+            'prevDate' => 'nullable|date',
+            'priceParts' => 'required|string',
+            'typeParts' => 'required|array',
+            'typeService' => 'required|array',
+            'typeVehicle' => 'required|string|max:100',
         ]);
 
-        // Retorna erro caso a validação falhe
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
@@ -40,37 +50,16 @@ class OrderController extends Controller
             ], 422);
         }
 
-        try {
-            // Cria um novo pedido (Order)
-            $order = new Order();
-            $order->client_id = $request->client_id;
-            $order->vehicle_id = $request->vehicle_id;
-            $order->save();  // Salva o pedido para gerar o ID
+        $clientId = (new CreateClientAction())->run($request);
 
-            // Adiciona os serviços ao pedido
-            foreach ($request->services as $service) {
-                $order->orderServices()->create([
-                    'service_id' => $service['service_id'],
-                ]);
-            }
+        $order = (new CreateOrderAction())->run($clientId, auth()->user()->id, $request);
 
-            // Retorna sucesso e os dados do pedido criado
-            return response()->json([
-                'success' => true,
-                'message' => 'Pedido criado com sucesso',
-                'data' => $order->load('orderServices.service')  // Carrega os serviços associados ao pedido
-            ], 201);
-        } catch (\Exception $e) {
-            // Trata qualquer exceção durante a criação do pedido
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao criar o pedido',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Pedido criado com sucesso',
+            'data' => $order
+        ], 201);
     }
-
-
 
     // Exibe um pedido específico
     public function show($id)

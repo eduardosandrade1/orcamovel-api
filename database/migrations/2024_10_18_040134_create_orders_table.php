@@ -21,12 +21,10 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Vehicle::class)->onDelete('cascade');
             $table->foreignIdFor(Client::class)->onDelete('cascade');
-            $table->foreignIdFor(VehicleBrand::class)->onDelete('cascade');
-            $table->foreignIdFor(VehicleColor::class)->onDelete('cascade');
-            $table->foreignIdFor(VehicleType::class)->onDelete('cascade');
             $table->foreignIdFor(User::class)->onDelete('cascade');
-            $table->decimal('total_price', 10, 2);
-            $table->text('notes')->nullable();
+            $table->string("vehicle_color");
+            $table->decimal('total_price', 10, 2);  // Coluna de preço total
+            $table->text('notes')->nullable();  // Notas opcionais sobre o pedido
             $table->timestamps();
         });
     }
