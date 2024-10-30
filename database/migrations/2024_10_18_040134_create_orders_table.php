@@ -2,9 +2,6 @@
 
 use App\Models\Api\Client;
 use App\Models\Api\Vehicle;
-use App\Models\Api\VehicleBrand;
-use App\Models\Api\VehicleColor;
-use App\Models\Api\VehicleType;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

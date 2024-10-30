@@ -31,7 +31,7 @@ return new class extends Migration
             $table->dropColumn('vehicle_info');            // Informações do veículo (JSON)
             $table->dropColumn('plate');                 // Placa do veículo
             $table->dropColumn('prev_date');               // Data prevista
-            $table->dropColumn('price_parts', 8, 2);    // Preço das peças
+            $table->dropColumn('price_parts');    // Preço das peças
             $table->dropColumn('type_parts');              // Tipos de peças (JSON)
             $table->dropColumn('type_service');            // Tipos de serviço (JSON)
             $table->dropColumn('type_vehicle');          // Tipo do veículo

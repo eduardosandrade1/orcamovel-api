@@ -15,6 +15,7 @@ Route::middleware('jwt-auth')->group(function () {
     Route::prefix('order')->group(function () {
         Route::get('/', [OrderController::class, 'getAll']);  // Listar todos os pedidos
         Route::post('/', [OrderController::class, 'create']); // Criar um novo pedido
+        Route::put('/{id}', [OrderController::class, 'changeStatus']); // Criar um novo pedido
         Route::get('/{id}', [OrderController::class, 'show']); // Exibir um pedido específico
     });
 

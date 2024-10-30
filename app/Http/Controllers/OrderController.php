@@ -13,11 +13,28 @@ use Illuminate\Support\Facades\Validator;
 
 class OrderController extends Controller
 {
-    public function getAll()
+    public function getAll(Request $request)
     {
         try {
             $userId = auth()->user()->id;
-            return Order::where('user_id', $userId)->get();
+
+            // Verifica se os parâmetros de mês e ano foram passados na requisição
+            $month = $request->input('month'); // Exemplo: '10' para Outubro
+            $year = $request->input('year');   // Exemplo: '2024' para o ano de 2024
+
+            // Inicia a query com o filtro pelo usuário autenticado
+            $query = Order::where('user_id', $userId);
+
+            // Adiciona filtros de mês e ano se ambos estiverem definidos
+            if ($month) {
+                $query->whereMonth('created_at', $month);
+            }
+            if ($year) {
+                $query->whereYear('created_at', $year);
+            }
+            
+            // Executa a query e retorna os resultados
+            return $query->get();
         } catch (Exception $e) {
             Log::error($e->getMessage() . " " . $e->getLine());
             return response()->json('error_generic', 400);
@@ -79,6 +96,36 @@ class OrderController extends Controller
         return response()->json([
             'success' => true,
             'data' => $order
+        ], 200);
+    }
+
+    public function changeStatus($id)
+    {
+        # seeing order status
+        $orderStatus = Order::find($id);
+        $statusOrderToChange = "input";
+
+        switch ($orderStatus->status) {
+            case "input":
+                $statusOrderToChange = "output";
+                break;
+            default:
+                $statusOrderToChange = "input";
+                break;
+        }
+        
+        $order = Order::where('id', $id)->update(['status' => $statusOrderToChange]);
+
+        if (!$order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'a error occurred while try it.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => Order::find($id),
         ], 200);
     }
 }
