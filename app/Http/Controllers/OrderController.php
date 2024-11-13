@@ -34,7 +34,7 @@ class OrderController extends Controller
             }
             
             // Executa a query e retorna os resultados
-            return $query->get();
+            return $query->orderBy('created_at', 'desc')->get();
         } catch (Exception $e) {
             Log::error($e->getMessage() . " " . $e->getLine());
             return response()->json('error_generic', 400);
