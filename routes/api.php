@@ -3,7 +3,9 @@
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\AnalysisController;
 use Illuminate\Support\Facades\Route;
+
 
 // Rotas de autenticação
 Route::post('register', [UserController::class, 'register']);
@@ -40,4 +42,8 @@ Route::middleware('jwt-auth')->group(function () {
     // Outras rotas de usuário
     Route::get('user/profile', [UserController::class, 'getUser']);  // Obter o perfil do usuário autenticado
     Route::post('logout', [UserController::class, 'logout']);        // Fazer logout
+
+    Route::get('/analysis', [AnalysisController::class, 'ordersAnalysis']);
 });
+
+
