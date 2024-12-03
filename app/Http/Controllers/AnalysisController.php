@@ -11,14 +11,18 @@ class AnalysisController extends Controller
 {
     public function ordersAnalysis(Request $request)
     {
-        return response()->json([
+        $formattedData = $this->formatChartData([
             'servicesQuantitys' => $this->getTypeServices(),
             'invoicings' => $this->getInvoicingsLastMonths(),
             'statusComparison' => $this->getStatusComparisonLastMonths(),
             'frequentVehicleColor' => $this->getMostFrequentVehicleColors(),
             'dayMostInvoicing' => $this->getDayWithMostInvoicings(),
+            'revenueByValueRange' => $this->getRevenueByValueRange(),
         ]);
+    
+        return response()->json($formattedData);
     }
+
 
     private function getTypeServices()
     {
@@ -241,5 +245,158 @@ class AnalysisController extends Controller
 
         return $result;
     }
+
+    public function getRevenueByValueRange()
+    {
+        // Define the value ranges
+        $ranges = [
+            'Menos de 500' => [0, 500],
+            '500 a 1000' => [500, 1000],
+            '1000 a 2000' => [1000, 2000],
+            'Acima de 2000' => [2000, PHP_INT_MAX]
+        ];
     
+        $results = [
+            'labels' => [],
+            'values' => [],
+            'colors' => [],
+            'type' => 'lines',
+        ];
+    
+        // Iterate over each value range
+        foreach ($ranges as $range => $limits) {
+            // Using Eloquent to sum the total_price within the range
+            $total = DB::table('orders')
+                ->whereBetween('total_price', [$limits[0], $limits[1]])
+                ->whereBetween('created_at', [Carbon::now()->subMonths(3)->startOfMonth(), Carbon::now()->endOfMonth()])
+                ->sum('total_price');
+    
+            // Storing the results
+            $results['labels'][] = $range;
+            $results['values'][] = $total ?: 0;  // Use 0 if no results
+            $results['colors'][] = $this->generateRandomColor();  // Random color for the chart
+        }
+    
+        return $results;
+    }
+    
+
+    public function formatChartData($apiData)
+    {
+        // Services Chart
+        $servicesDatasets = array_map(function ($label, $index) use ($apiData) {
+            return [
+                'id' => $label,
+                'label' => $label,
+                'data' => [$apiData['servicesQuantitys']['values'][$index]],
+                'borderColor' => '#ccc',
+                'backgroundColor' => $apiData['servicesQuantitys']['colors'][$index],
+                'borderWidth' => 0,
+            ];
+        }, $apiData['servicesQuantitys']['labels'], array_keys($apiData['servicesQuantitys']['labels']));
+
+        $servicesChart = [
+            'title' => 'Tipos de Serviços',
+            'subtitle' => 'Tipos de serviços feitos nos últimos 3 meses',
+            'labels' => $this->getLabelsFromTypeGraphs($apiData['servicesQuantitys']),
+            'datasets' => $servicesDatasets,
+            'type' => $apiData['servicesQuantitys']['type'],
+        ];
+
+        // Invoicing Chart
+        $invoicingsDatasets = array_map(function ($label, $index) use ($apiData) {
+            return [
+                'id' => $label,
+                'label' => $label,
+                'data' => [$apiData['invoicings']['values'][$index]],
+                'borderColor' => '#1a1a1a',
+                'backgroundColor' => $apiData['invoicings']['colors'][$index],
+                'borderWidth' => 0,
+            ];
+        }, $apiData['invoicings']['labels'], array_keys($apiData['invoicings']['labels']));
+
+        $invoicingChart = [
+            'title' => 'Últimos Faturamentos',
+            'subtitle' => 'Faturamento dos últimos 3 meses',
+            'labels' => $this->getLabelsFromTypeGraphs($apiData['invoicings']),
+            'datasets' => $invoicingsDatasets,
+            'type' => $apiData['invoicings']['type'],
+        ];
+
+        // Status Comparison Chart
+        $statusComparisonDatasets = array_map(function ($label, $index) use ($apiData) {
+            return [
+                'id' => $label,
+                'label' => $label,
+                'data' => [$apiData['statusComparison']['values'][$index]],
+                'borderColor' => '#1a1a1a',
+                'backgroundColor' => $apiData['statusComparison']['colors'][$index],
+                'borderWidth' => 0,
+            ];
+        }, $apiData['statusComparison']['labels'], array_keys($apiData['statusComparison']['labels']));
+
+        $statusComparisonChart = [
+            'title' => 'Fluxo de Veículos',
+            'subtitle' => 'Fluxo de veículos dos últimos 3 meses',
+            'labels' => $this->getLabelsFromTypeGraphs($apiData['statusComparison']),
+            'datasets' => $statusComparisonDatasets,
+            'type' => $apiData['statusComparison']['type'],
+        ];
+
+        // Frequent Vehicle Color Chart
+        $frequentVehicleColorDatasets = array_map(function ($label, $index) use ($apiData) {
+            return [
+                'id' => $label,
+                'label' => $label,
+                'data' => $apiData['frequentVehicleColor']['values'],
+                'borderColor' => '#1a1a1a',
+                'backgroundColor' => $apiData['frequentVehicleColor']['colors'],
+                'borderWidth' => 0,
+            ];
+        }, $apiData['frequentVehicleColor']['labels'], array_keys($apiData['frequentVehicleColor']['labels']));
+
+        $frequentVehicleColorChart = [
+            'title' => 'Cores Mais Usadas',
+            'subtitle' => 'Cores mais usadas nos veículos dos últimos 3 meses',
+            'labels' => $this->getLabelsFromTypeGraphs($apiData['frequentVehicleColor']),
+            'datasets' => $frequentVehicleColorDatasets,
+            'type' => $apiData['frequentVehicleColor']['type'],
+        ];
+
+        // Day Most Invoicing Chart
+        $dayMostInvoicingDatasets = array_map(function ($label, $index) use ($apiData) {
+            return [
+                'id' => $label,
+                'label' => $label,
+                'data' => [$apiData['dayMostInvoicing']['values'][$index]],
+                'borderColor' => '#1a1a1a',
+                'backgroundColor' => $apiData['dayMostInvoicing']['colors'][$index],
+                'borderWidth' => 0,
+            ];
+        }, $apiData['dayMostInvoicing']['labels'], array_keys($apiData['dayMostInvoicing']['labels']));
+
+        $dayMostInvoicingChart = [
+            'title' => 'Dias com Mais Orçamentos',
+            'subtitle' => 'Dias dos últimos 3 meses com mais orçamentos',
+            'labels' => $this->getLabelsFromTypeGraphs($apiData['dayMostInvoicing']),
+            'datasets' => $dayMostInvoicingDatasets,
+            'type' => $apiData['dayMostInvoicing']['type'],
+        ];
+
+        // Return all formatted charts
+        return [
+            $servicesChart,
+            $invoicingChart,
+            $statusComparisonChart,
+            $frequentVehicleColorChart,
+            $dayMostInvoicingChart,
+        ];
+    }
+
+    private function getLabelsFromTypeGraphs($apiDataObject)
+    {
+        $graphs = ['doughnut', 'pie'];
+        return in_array($apiDataObject['type'], $graphs) ? $apiDataObject['labels'] : [''];
+    }
+
 }
