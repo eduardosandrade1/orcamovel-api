@@ -4,12 +4,17 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\AnalysisController;
+use App\Http\Controllers\Auth\PasswordResetController;
 use Illuminate\Support\Facades\Route;
 
 
 // Rotas de autenticação
 Route::post('register', [UserController::class, 'register']);
 Route::post('login', [UserController::class, 'login']);
+Route::post('password/send-code', [PasswordResetController::class, 'sendResetCode']);
+Route::post('password/validate-code', [PasswordResetController::class, 'validateResetCode']);
+Route::post('password/reset', [PasswordResetController::class, 'resetPassword']);
+
 
 Route::middleware('jwt-auth')->group(function () {
 

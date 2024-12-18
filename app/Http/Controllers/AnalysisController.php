@@ -6,6 +6,7 @@ use App\Models\Api\Order;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AnalysisController extends Controller
 {
@@ -92,6 +93,7 @@ class AnalysisController extends Controller
         // Inicializar os arrays para os dados de resposta
         $labels = [];
         $values = [];
+        $colors = [];
 
         // Agrupar e somar os valores por mês
         foreach ($typeServices as $order) {
@@ -118,13 +120,14 @@ class AnalysisController extends Controller
             if (in_array($monthName, $labels)) {
                 $sortedLabels[] = $monthName;
                 $sortedValues[] = $values[$monthName] ?? 0;
+                $colors[] = $this->generateRandomColor();
             }
         }
 
         return [
             'labels' => $sortedLabels,
             'values' => $sortedValues,
-            'colors' => [$this->generateRandomColor(), $this->generateRandomColor()],
+            'colors' => $colors,
             'type' => 'lines',
         ];
     }
