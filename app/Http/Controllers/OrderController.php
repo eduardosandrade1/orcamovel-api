@@ -3,9 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Actions\CreateClientAction;
+use App\Actions\CreateFilesOrderAction;
 use App\Actions\CreateOrderAction;
+use App\Actions\CreateTypePartsOrderAction;
+use App\Actions\CreateTypeServiceAction;
 use App\Models\Api\Client;
 use App\Models\Api\Order;
+use App\Orchestrators\OrderOrchestrators;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -45,14 +49,11 @@ class OrderController extends Controller
     {
         // Validação dos dados
         $validator = Validator::make($request->all(), [
-            'bandVehicle.id' => 'required|integer',
-            'breakDowns' => 'array',
             'clientName' => 'required|string|max:255',
             'colorVehicle' => 'required|string|max:255',
             'contactValue' => 'required|string|max:255',
             'infosVehicle' => 'array',
             'plateName' => 'required|string|max:10',
-            'prevDate' => 'nullable|date',
             'priceParts' => 'required|string',
             'typeParts' => 'required|array',
             'typeService' => 'required|array',
@@ -67,14 +68,13 @@ class OrderController extends Controller
             ], 422);
         }
 
-        $clientId = (new CreateClientAction())->run($request);
+        (new OrderOrchestrators())->handler($request, auth()->user()->id);
 
-        $order = (new CreateOrderAction())->run($clientId, auth()->user()->id, $request);
 
         return response()->json([
             'success' => true,
             'message' => 'Pedido criado com sucesso',
-            'data' => $order
+            'data' => [],
         ], 201);
     }
 

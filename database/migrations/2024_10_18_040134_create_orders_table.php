@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\Api\Client;
-use App\Models\Api\Vehicle;
+use App\Models\Api\VehicleInfo;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -16,7 +16,6 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Vehicle::class)->onDelete('cascade');
             $table->foreignIdFor(Client::class)->onDelete('cascade');
             $table->foreignIdFor(User::class)->onDelete('cascade');
             $table->string("vehicle_color");

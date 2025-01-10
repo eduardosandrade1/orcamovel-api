@@ -13,14 +13,10 @@ final class CreateOrderAction
 
     // Criação do pedido (order)
     $order = new Order();
-    $order->vehicle_id = $data->bandVehicle['id'];
     $order->client_id = $clientId;
     $order->vehicle_color = $data->colorVehicle;
-    $order->vehicle_info = json_encode($data->infosVehicle); // Armazena o objeto como JSON
     $order->plate = $data->plateName;
     $order->price_parts = $formattedPriceParts;
-    $order->type_parts = json_encode($data->typeParts); // Armazena o array como JSON
-    $order->type_service = json_encode($data->typeService); // Armazena o array como JSON
     $order->type_vehicle = $data->typeVehicle;
 
     // Assumindo que você tem um campo total_price calculado

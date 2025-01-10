@@ -10,8 +10,12 @@ use Illuminate\Support\Facades\Log;
 
 class AnalysisController extends Controller
 {
+    private $companyId;
+
     public function ordersAnalysis(Request $request)
     {
+        $this->companyId = auth()->user()->company_id;
+
         $formattedData = $this->formatChartData([
             'servicesQuantitys' => $this->getTypeServices(),
             'invoicings' => $this->getInvoicingsLastMonths(),
@@ -28,11 +32,14 @@ class AnalysisController extends Controller
     private function getTypeServices()
     {
         $typeServices = Order::select('type_service')
-            ->whereBetween('created_at', [
-                Carbon::now()->subMonths(3)->startOfMonth(), // Início do mês 3 meses atrás
-                Carbon::now()->endOfMonth(),                // Fim do mês atual
-            ])
-            ->get();
+        ->whereHas('user', function ($query) {
+            $query->where('company_id', $this->companyId);
+        })
+        ->whereBetween('created_at', [
+            Carbon::now()->subMonths(3)->startOfMonth(),
+            Carbon::now()->endOfMonth(),
+        ])
+        ->get();
     
         // Decodifica o JSON de cada registro e transforma em array
         $typeServices = $typeServices->map(function($item) {
@@ -68,11 +75,14 @@ class AnalysisController extends Controller
     {
         // Consultar as ordens no banco de dados nos últimos 3 meses
         $typeServices = Order::select('total_price', 'created_at')
-            ->whereBetween('created_at', [
-                Carbon::now()->subMonths(3)->startOfMonth(),
-                Carbon::now()->endOfMonth(),
-            ])
-            ->get();
+        ->whereHas('user', function ($query) {
+            $query->where('company_id', $this->companyId);
+        })
+        ->whereBetween('created_at', [
+            Carbon::now()->subMonths(3)->startOfMonth(),
+            Carbon::now()->endOfMonth(),
+        ])
+        ->get();
 
         // Mapeamento dos meses em números (1-12) para nomes em português
         $monthNames = [
@@ -136,12 +146,15 @@ class AnalysisController extends Controller
     {
         // Filtrando os pedidos nos últimos 3 meses
         $orders = Order::select('status', 'created_at')
-            ->whereBetween('created_at', [
-                Carbon::now()->subMonths(3)->startOfMonth(),
-                Carbon::now()->endOfMonth(),
-            ])
-            ->whereIn('status', ['only-budget', 'input', 'output']) // Filtro pelos status de interesse
-            ->get();
+        ->whereHas('user', function ($query) {
+            $query->where('company_id', $this->companyId);
+        })
+        ->whereBetween('created_at', [
+            Carbon::now()->subMonths(3)->startOfMonth(),
+            Carbon::now()->endOfMonth(),
+        ])
+        ->whereIn('status', ['only-budget', 'input', 'output'])
+        ->get();
     
         // Inicializando os contadores de cada status
         $statusCount = [
@@ -183,12 +196,15 @@ class AnalysisController extends Controller
     {
         // Consultando as cores dos veículos nos últimos 3 meses
         $vehicleColors = Order::select('vehicle_color')
-            ->whereBetween('created_at', [
-                Carbon::now()->subMonths(3)->startOfMonth(),
-                Carbon::now()->endOfMonth(),
-            ])
-            ->whereNotNull('vehicle_color') // Certificando que a cor do veículo não está nula
-            ->get();
+        ->whereHas('user', function ($query) {
+            $query->where('company_id', $this->companyId);
+        })
+        ->whereBetween('created_at', [
+            Carbon::now()->subMonths(3)->startOfMonth(),
+            Carbon::now()->endOfMonth(),
+        ])
+        ->whereNotNull('vehicle_color')
+        ->get();
 
         // Contando a quantidade de cada cor
         $colorCount = $vehicleColors->countBy('vehicle_color');
@@ -232,6 +248,9 @@ class AnalysisController extends Controller
     
             // Consultando os pedidos por dia dentro do mês
             $ordersPerDay = Order::selectRaw('DATE(created_at) as date, COUNT(*) as total')
+                ->whereHas('user', function ($query) {
+                    $query->where('company_id', $this->companyId);
+                })
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->groupByRaw('DATE(created_at)')
                 ->orderByDesc('total')  // Ordenando para pegar o maior número de orçamentos
@@ -270,6 +289,9 @@ class AnalysisController extends Controller
         foreach ($ranges as $range => $limits) {
             // Using Eloquent to sum the total_price within the range
             $total = DB::table('orders')
+                ->whereHas('user', function ($query) {
+                    $query->where('company_id', $this->companyId);
+                })
                 ->whereBetween('total_price', [$limits[0], $limits[1]])
                 ->whereBetween('created_at', [Carbon::now()->subMonths(3)->startOfMonth(), Carbon::now()->endOfMonth()])
                 ->sum('total_price');
