@@ -31,36 +31,35 @@ class AnalysisController extends Controller
 
     private function getTypeServices()
     {
-        $typeServices = Order::select('type_service')
-        ->whereHas('user', function ($query) {
-            $query->where('company_id', $this->companyId);
-        })
-        ->whereBetween('created_at', [
-            Carbon::now()->subMonths(3)->startOfMonth(),
-            Carbon::now()->endOfMonth(),
-        ])
-        ->get();
-    
-        // Decodifica o JSON de cada registro e transforma em array
-        $typeServices = $typeServices->map(function($item) {
-            return json_decode($item->type_service, true); // Retorna como array
-        })->toArray();
-    
-        // Achata o array e conta as ocorrências
-        $flatArray = array_merge(...$typeServices);
-    
-        // Formata os labels com as primeiras letras maiúsculas
-        $formattedValues = collect($flatArray)
-            ->unique()
-            ->map(function ($service) {
-                return ucfirst($service);
+        // Obtendo os tipos de serviços dos últimos 3 meses
+        $typeServices = Order::join('order_type_services', 'orders.id', '=', 'order_type_services.order_id')
+            ->select('order_type_services.name as type_service')
+            ->whereHas('user', function ($query) {
+                $query->where('company_id', $this->companyId);
             })
-            ->toArray();
+            ->whereBetween('orders.created_at', [
+                Carbon::now()->subMonths(3)->startOfMonth(),
+                Carbon::now()->endOfMonth(),
+            ])
+            ->get();
+
+        // Agrupando os tipos de serviços e contando a quantidade de cada um
+        $groupedServices = $typeServices->groupBy('type_service')->map(function ($group) {
+            return $group->count();
+        });
+
+        // Formatar os labels com as primeiras letras maiúsculas
+        $labels = $groupedServices->keys()->map(function ($service) {
+            return ucfirst($service);
+        });
+
+        // Os valores correspondentes a cada tipo de serviço
+        $values = $groupedServices->values();
     
         // Prepara o array de resposta
         return [
-            'values' => array_values(array_count_values($flatArray)),
-            'labels' => $formattedValues,
+            'values' => $values,
+            'labels' => $labels->toArray(),
             'colors' => [$this->generateRandomColor(), $this->generateRandomColor()],
             'type' => 'lines',
         ];

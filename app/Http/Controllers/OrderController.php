@@ -7,6 +7,7 @@ use App\Actions\CreateFilesOrderAction;
 use App\Actions\CreateOrderAction;
 use App\Actions\CreateTypePartsOrderAction;
 use App\Actions\CreateTypeServiceAction;
+use App\Http\Requests\Api\CreateOrderRequest;
 use App\Models\Api\Client;
 use App\Models\Api\Order;
 use App\Orchestrators\OrderOrchestrators;
@@ -45,26 +46,13 @@ class OrderController extends Controller
         }
     }
 
-    public function create(Request $request)
+    public function create(CreateOrderRequest $request)
     {
-        // Validação dos dados
-        $validator = Validator::make($request->all(), [
-            'clientName' => 'required|string|max:255',
-            'colorVehicle' => 'required|string|max:255',
-            'contactValue' => 'required|string|max:255',
-            'infosVehicle' => 'array',
-            'plateName' => 'required|string|max:10',
-            'priceParts' => 'required|string',
-            'typeParts' => 'required|array',
-            'typeService' => 'required|array',
-            'typeVehicle' => 'required|string|max:100',
-        ]);
-
-        if ($validator->fails()) {
+        if (!$request->validated()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Erro de validação',
-                'errors' => $validator->errors()
+                'errors' => $request->validated(),
             ], 422);
         }
 
@@ -74,7 +62,9 @@ class OrderController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Pedido criado com sucesso',
-            'data' => [],
+            'data' => [
+                'pdf-viewer' => ''
+            ],
         ], 201);
     }
 

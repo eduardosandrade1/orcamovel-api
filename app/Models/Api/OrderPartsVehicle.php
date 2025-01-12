@@ -7,6 +7,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OrderPartsVehicle extends Model
 {
+    protected $with = [
+        'images',
+        'avarias',
+    ];
+
     public function images(): HasMany
     {
         return $this->hasMany(OrderPartsVehicleImage::class);
