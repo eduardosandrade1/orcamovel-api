@@ -9,11 +9,14 @@ use App\Actions\CreateOrderAction;
 use App\Actions\CreateTypePartsOrderAction;
 use App\Actions\CreateTypeServiceAction;
 use App\Actions\CreateVehicleInfoOrderAction;
+use App\Actions\SavePdfOrderAction;
+use App\Models\Api\Order;
+use App\Services\PdfService;
 use Illuminate\Support\Facades\Log;
 
 class OrderOrchestrators
 {
-    public function handler($validateData, int $userID): void
+    public function handler($validateData, int $userID)
     {
 
         $clientId = (new CreateClientAction())->run($validateData);
@@ -36,6 +39,11 @@ class OrderOrchestrators
             }
         }
 
+        $order = Order::find($order->id);
+
+        $pathPdf = (new PdfService())->generatePdf($order->toArray(), 'pdf.order', "user/".$userID."/order/\\".$order->id.".pdf");
+
+        return (new SavePdfOrderAction())->run($order->id, $pathPdf);
     }
 
 }

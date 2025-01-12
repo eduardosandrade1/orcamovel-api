@@ -16,6 +16,7 @@ return new class extends Migration
             $table->date('prev_date')->nullable();               // Data prevista
             $table->decimal('price_parts', 8, 2);    // Preço das peças
             $table->string('type_vehicle');          // Tipo do veículo
+            $table->string('pdf_path')->nullable();
         });
     }
 
@@ -29,6 +30,7 @@ return new class extends Migration
             $table->dropColumn('prev_date');               // Data prevista
             $table->dropColumn('price_parts');    // Preço das peças
             $table->dropColumn('type_vehicle');          // Tipo do veículo
+            $table->dropColumn('pdf_path');          // Tipo do veículo
         });
     }
 };

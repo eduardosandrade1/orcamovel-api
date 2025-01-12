@@ -14,6 +14,7 @@ use App\Orchestrators\OrderOrchestrators;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class OrderController extends Controller
@@ -56,14 +57,14 @@ class OrderController extends Controller
             ], 422);
         }
 
-        (new OrderOrchestrators())->handler($request, auth()->user()->id);
+        $PDFResponse = (new OrderOrchestrators())->handler($request, auth()->user()->id)->pdf_path;
 
 
         return response()->json([
             'success' => true,
             'message' => 'Pedido criado com sucesso',
             'data' => [
-                'pdf-viewer' => ''
+                'pdf-viewer' => $PDFResponse,
             ],
         ], 201);
     }
@@ -85,7 +86,7 @@ class OrderController extends Controller
         // Retorna os detalhes do pedido
         return response()->json([
             'success' => true,
-            'data' => $order
+            'data' => $order,
         ], 200);
     }
 
