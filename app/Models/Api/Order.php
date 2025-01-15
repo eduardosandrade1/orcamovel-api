@@ -21,7 +21,7 @@ class Order extends Model
     protected function pdfPath(): Attribute
     {
         return Attribute::make(
-            get: fn (string $value) => asset('storage/' . ltrim($value, '/')),
+            get: fn (string | null $value) => $value ? asset('storage/' . ltrim($value, '/')) : $value,
         );
     }
 
