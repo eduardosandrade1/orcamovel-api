@@ -3,6 +3,7 @@
 namespace App\Models\Api;
 
 use App\Models\User;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -16,6 +17,13 @@ class Order extends Model
         'typeParts',
         'typeService',
     ];
+
+    protected function pdfPath(): Attribute
+    {
+        return Attribute::make(
+            get: fn (string $value) => asset('storage/' . ltrim($value, '/')),
+        );
+    }
 
     public function client() {
         return $this->belongsTo(Client::class);
